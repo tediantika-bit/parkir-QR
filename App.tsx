@@ -1,12 +1,11 @@
-
 import React, { useState, useCallback, useRef } from 'react';
-import Header from './components/Header';
-import Scanner from './components/Scanner';
-import ResultCard from './components/ResultCard';
-import AdminPanel from './components/AdminPanel';
-import { AttendanceLog, ScanStatus } from './types';
-import { submitAttendance } from './services/api';
-import { APP_CONFIG } from './constants';
+import Header from './components/Header.tsx';
+import Scanner from './components/Scanner.tsx';
+import ResultCard from './components/ResultCard.tsx';
+import AdminPanel from './components/AdminPanel.tsx';
+import { AttendanceLog, ScanStatus } from './types.ts';
+import { submitAttendance } from './services/api.ts';
+import { APP_CONFIG } from './constants.ts';
 import { History, AlertTriangle, Play, Settings } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -36,7 +35,6 @@ const App: React.FC = () => {
     
     const now = ctx.currentTime;
 
-    // Helper untuk membuat nada tunggal
     const playNote = (freq: number, startTime: number, duration: number, oscType: OscillatorType = 'sine', volume: number = 0.2) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -56,17 +54,14 @@ const App: React.FC = () => {
     };
 
     if (type === 'SCAN') {
-      // Beep tunggal standar saat QR terbaca
       playNote(880, now, 0.1); 
     } 
     else if (type === 'SUCCESS') {
-      // Melodi Chime 3-Nada (C5 - E5 - G5) yang ceria
       playNote(523.25, now, 0.3);        // C5
       playNote(659.25, now + 0.1, 0.3);  // E5
       playNote(783.99, now + 0.2, 0.4);  // G5
     } 
     else if (type === 'WARNING') {
-      // Suara Buzzer rendah (dua nada menurun)
       playNote(220, now, 0.2, 'sawtooth', 0.15);
       playNote(165, now + 0.15, 0.4, 'sawtooth', 0.15);
     }
@@ -77,7 +72,6 @@ const App: React.FC = () => {
   const handleStartApp = () => {
     initAudio();
     setIsStarted(true);
-    // Verifikasi suara saat pertama kali masuk
     setTimeout(() => playSound('SUCCESS'), 300);
   };
 
@@ -94,18 +88,14 @@ const App: React.FC = () => {
 
     isProcessing.current = true;
     setScanStatus(ScanStatus.PROCESSING);
-    
-    // Suara saat QR masuk ke sistem
     playSound('SCAN');
 
     try {
         const result = await submitAttendance(decodedText);
         
-        // SUARA FEEDBACK BERDASARKAN HASIL API
         if (result.code === 'SUCCESS') {
           playSound('SUCCESS');
         } else {
-          // Termasuk DUPLICATE, NOT_FOUND, atau ERROR
           playSound('WARNING');
         }
 

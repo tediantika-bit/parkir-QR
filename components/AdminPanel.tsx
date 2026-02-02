@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Upload, Plus, Save, Database, AlertCircle } from 'lucide-react';
-import { addStudent, importStudents } from '../services/api';
-import { StudentData } from '../types';
+import { addStudent, importStudents } from '../services/api.ts';
+import { StudentData } from '../types.ts';
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -12,7 +12,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
-  // Manual Form State
   const [formData, setFormData] = useState<StudentData>({
     nis: '',
     nama: '',
@@ -20,7 +19,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     punyaSim: false
   });
 
-  // Bulk Form State
   const [bulkText, setBulkText] = useState('');
 
   const handleManualSubmit = async (e: React.FormEvent) => {
@@ -37,7 +35,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         const res = await addStudent(formData);
         if (res.success) {
             setFeedback({ type: 'success', message: res.message });
-            setFormData({ nis: '', nama: '', kelas: '', punyaSim: false }); // Reset
+            setFormData({ nis: '', nama: '', kelas: '', punyaSim: false });
         } else {
             setFeedback({ type: 'error', message: res.message });
         }
@@ -57,10 +55,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     try {
         const lines = bulkText.trim().split('\n');
         const students: StudentData[] = [];
-        let errorLines = 0;
 
         lines.forEach(line => {
-            // Format: NIS, Nama, Kelas, PunyaSIM(Y/N/True/False)
             const parts = line.split(',').map(p => p.trim());
             if (parts.length >= 3) {
                 const hasSim = parts[3]?.toLowerCase().startsWith('y') || parts[3]?.toLowerCase() === 'true';
@@ -70,8 +66,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     kelas: parts[2],
                     punyaSim: hasSim
                 });
-            } else {
-                errorLines++;
             }
         });
 
@@ -99,7 +93,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
             <div className="flex items-center gap-2">
                 <Database className="text-blue-600" size={20} />
@@ -110,7 +103,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             </button>
         </div>
 
-        {/* Tabs */}
         <div className="flex border-b border-gray-200">
             <button 
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'manual' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-500 hover:bg-gray-50'}`}
@@ -130,9 +122,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             </button>
         </div>
 
-        {/* Content */}
         <div className="p-6 overflow-y-auto flex-1">
-            
             {feedback && (
                 <div className={`mb-4 p-3 rounded-lg text-sm flex items-start gap-2 ${feedback.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
                     <AlertCircle size={16} className="mt-0.5 shrink-0" />
@@ -143,7 +133,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             {activeTab === 'manual' ? (
                 <form onSubmit={handleManualSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase">NIS (Nomor Induk)</label>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase">NIS</label>
                         <input 
                             type="text" 
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
@@ -198,7 +188,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         <code className="block bg-white p-2 rounded border border-blue-200 text-xs">
                             NIS, Nama Lengkap, Kelas, PunyaSIM (Y/N)
                         </code>
-                        <p className="mt-2 text-xs opacity-80">Contoh:<br/>1005, Siti Aminah, XII IPA 1, Y<br/>1006, Doni Tata, XI IPS 2, N</p>
                     </div>
                     
                     <textarea 
