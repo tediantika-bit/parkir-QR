@@ -1,0 +1,7 @@
+{
+  "name": "fix Sistem Aplikasi Parkir SMANCIR",
+  "description": "Aplikasi absensi dan validasi parkir siswa menggunakan QR Code terintegrasi dengan Google Sheets.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
