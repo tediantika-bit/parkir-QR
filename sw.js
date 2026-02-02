@@ -1,23 +1,18 @@
-const CACHE_NAME = 'smancir-parkir-v1.5';
+const CACHE_NAME = 'smancir-parkir-v1.6';
 const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './manifest.json',
+  'index.html',
+  'manifest.json',
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
   'https://iili.io/fLQoCep.png'
 ];
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('SW: Pre-caching Core Assets');
-      // Menggunakan return cache.addAll agar jika satu gagal, instalasi tetap lanjut
-      return Promise.allSettled(
-        ASSETS_TO_CACHE.map(url => cache.add(url))
-      );
-    })
+      return cache.addAll(ASSETS_TO_CACHE);
+    }).then(() => self.skipWaiting())
   );
 });
 
@@ -27,47 +22,38 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cache) => {
           if (cache !== CACHE_NAME) {
-            console.log('SW: Removing old cache', cache);
             return caches.delete(cache);
           }
         })
-      ).then(() => self.clients.claim());
-    })
+      );
+    }).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (event) => {
-  // Hanya tangani request GET
+  // Hanya proses request GET
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // Strategi Khusus untuk Navigasi (Halaman Utama)
+  // STRATEGI NAVIGASI: Network First, Fallback to Cache
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('./index.html') || caches.match('./');
-      })
+      fetch(event.request)
+        .catch(() => {
+          return caches.match('index.html');
+        })
     );
     return;
   }
 
-  // Strategi Cache First, Fallback to Network
+  // STRATEGI ASET LAIN: Cache First, Fallback to Network
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request).then((fetchRes) => {
-        // Jangan simpan response error ke cache
-        if (!fetchRes || fetchRes.status !== 200 || fetchRes.type !== 'basic') {
-          return fetchRes;
-        }
-        
-        // Simpan aset baru secara dinamis jika perlu (opsional)
-        // const resClone = fetchRes.clone();
-        // caches.open(CACHE_NAME).then(cache => cache.put(event.request, resClone));
-        
+        // Jangan simpan response error/external CDN yang besar secara otomatis di sini
         return fetchRes;
       }).catch(() => {
-        // Fallback jika benar-benar offline dan tidak ada di cache
         if (event.request.destination === 'image') {
           return caches.match('https://iili.io/fLQoCep.png');
         }
