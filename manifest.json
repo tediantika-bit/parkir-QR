@@ -2,7 +2,9 @@
   "name": "Sistem Aplikasi Parkir SMAN 1 Ciruas",
   "short_name": "Parkir SMANCIR",
   "description": "Aplikasi Absensi Parkir Siswa SMAN 1 Ciruas",
-  "start_url": "./",
+  "id": "/parkir-smancir",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#2563EB",
   "theme_color": "#2563EB",
@@ -12,13 +14,23 @@
       "src": "https://iili.io/fLQoCep.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "https://iili.io/fLQoCep.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    }
+  ],
+  "categories": ["education", "utilities"],
+  "screenshots": [
+    {
+      "src": "https://iili.io/fLQoCep.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tampilan Utama Aplikasi"
     }
   ]
 }

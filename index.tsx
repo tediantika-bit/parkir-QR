@@ -2,12 +2,24 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 
-// Registrasi Service Worker untuk PWA
+// Registrasi Service Worker dengan penanganan update
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('SW Registered!', reg))
-      .catch(err => console.log('SW Registration Failed!', err));
+      .then(reg => {
+        console.log('SW Registered!', reg);
+        
+        // Cek update SW secara berkala
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker?.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('Konten baru tersedia, silakan refresh.');
+            }
+          });
+        });
+      })
+      .catch(err => console.error('SW Registration Failed!', err));
   });
 }
 
