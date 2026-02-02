@@ -1,5 +1,5 @@
-import { APP_CONFIG, MOCK_STUDENTS } from '../constants';
-import { ApiResponse, StudentData } from '../types';
+import { APP_CONFIG, MOCK_STUDENTS } from '../constants.ts';
+import { ApiResponse, StudentData } from '../types.ts';
 
 export const submitAttendance = async (nis: string): Promise<ApiResponse> => {
   if (APP_CONFIG.USE_DEMO_MODE) {
