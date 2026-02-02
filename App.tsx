@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Header from './components/Header.tsx';
 import Scanner from './components/Scanner.tsx';
 import ResultCard from './components/ResultCard.tsx';
@@ -6,7 +6,7 @@ import AdminPanel from './components/AdminPanel.tsx';
 import { AttendanceLog, ScanStatus } from './types.ts';
 import { submitAttendance } from './services/api.ts';
 import { APP_CONFIG } from './constants.ts';
-import { History, AlertTriangle, Play, Settings } from 'lucide-react';
+import { History, AlertTriangle, Play, Settings, Download } from 'lucide-react';
 
 const App: React.FC = () => {
   const [isStarted, setIsStarted] = useState<boolean>(false);
@@ -14,9 +14,32 @@ const App: React.FC = () => {
   const [scanStatus, setScanStatus] = useState<ScanStatus>(ScanStatus.IDLE);
   const [lastLog, setLastLog] = useState<AttendanceLog | null>(null);
   const [recentLogs, setRecentLogs] = useState<AttendanceLog[]>([]);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   
   // Audio Context Ref
   const audioCtxRef = useRef<AudioContext | null>(null);
+
+  useEffect(() => {
+    // Listen for the beforeinstallprompt event
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      setDeferredPrompt(null);
+      console.log('Aplikasi berhasil diinstal');
+    });
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   const initAudio = () => {
     if (!audioCtxRef.current) {
@@ -145,13 +168,26 @@ const App: React.FC = () => {
         </div>
         <h1 className="text-3xl font-bold mb-2">Sistem Aplikasi Parkir</h1>
         <p className="text-blue-100 mb-8 max-w-xs text-sm font-medium tracking-widest opacity-90">SMAN 1 CIRUAS</p>
-        <button 
-          onClick={handleStartApp}
-          className="bg-white text-blue-600 font-bold px-10 py-4 rounded-2xl shadow-xl flex items-center gap-3 active:scale-95 transition-transform group"
-        >
-          <Play size={20} fill="currentColor" className="group-hover:translate-x-1 transition-transform" />
-          MULAI APLIKASI
-        </button>
+        
+        <div className="flex flex-col gap-3 w-full max-w-xs">
+          <button 
+            onClick={handleStartApp}
+            className="bg-white text-blue-600 font-bold px-10 py-4 rounded-2xl shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-transform group"
+          >
+            <Play size={20} fill="currentColor" className="group-hover:translate-x-1 transition-transform" />
+            MULAI APLIKASI
+          </button>
+
+          {deferredPrompt && (
+            <button 
+              onClick={handleInstallClick}
+              className="bg-blue-500/50 text-white font-semibold px-10 py-3 rounded-2xl border border-white/20 flex items-center justify-center gap-3 active:scale-95 transition-transform"
+            >
+              <Download size={18} />
+              Install Aplikasi
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -242,7 +278,7 @@ const App: React.FC = () => {
       )}
       
       <footer className="text-center p-6 text-gray-400 text-[10px] mt-auto font-medium">
-        DEVELOPED BY TIM IT SMAN 1 CIRUAS &bull; VERSION 1.4 &bull; {new Date().getFullYear()}
+        2026 PARKIR QR SMAN 1 CIRUAS &bull; VERSION 1.5-PWA &bull; {new Date().getFullYear()}
       </footer>
     </div>
   );
