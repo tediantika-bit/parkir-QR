@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smancir-parkir-v1.1';
+const CACHE_NAME = 'smancir-parkir-v1.4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -9,27 +9,25 @@ const ASSETS_TO_CACHE = [
   'https://iili.io/fLQoCep.png'
 ];
 
-// Install Event - Caching Assets
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Memaksa SW baru menjadi aktif segera
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('SW: Caching App Shell');
+      console.log('SW: Pre-caching assets');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
 });
 
-// Activate Event - Cleanup old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     Promise.all([
-      clients.claim(), // Mengambil kendali client segera
+      clients.claim(),
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cache) => {
             if (cache !== CACHE_NAME) {
-              console.log('SW: Clearing old cache', cache);
+              console.log('SW: Cleaning old cache', cache);
               return caches.delete(cache);
             }
           })
@@ -39,9 +37,8 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event - Network First with Cache Fallback + Navigation Fallback
 self.addEventListener('fetch', (event) => {
-  // Strategi Khusus untuk Navigasi (Mencegah 404 saat buka App dari Home Screen)
+  // Strategi Navigation Fallback (untuk rute SPA)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => {
@@ -51,11 +48,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategi Cache First untuk aset statis
+  // Strategi Cache First untuk aset statis lainnya
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request).catch(() => {
-        // Jika offline dan aset tidak ada di cache
+        // Fallback jika gambar gagal dimuat saat offline
         if (event.request.destination === 'image') {
           return caches.match('https://iili.io/fLQoCep.png');
         }

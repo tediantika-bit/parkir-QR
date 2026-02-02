@@ -2,24 +2,34 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 
-// Registrasi Service Worker dengan penanganan update
+// Registrasi Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
+    // Gunakan path relatif sederhana yang didukung luas oleh browser
+    const swPath = './sw.js';
+
+    navigator.serviceWorker.register(swPath)
       .then(reg => {
-        console.log('SW Registered!', reg);
+        console.log('✅ PWA: Service Worker terdaftar. Scope:', reg.scope);
         
-        // Cek update SW secara berkala
-        reg.addEventListener('updatefound', () => {
-          const newWorker = reg.installing;
-          newWorker?.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('Konten baru tersedia, silakan refresh.');
-            }
-          });
-        });
+        reg.onupdatefound = () => {
+          const installingWorker = reg.installing;
+          if (installingWorker) {
+            installingWorker.onstatechange = () => {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('✨ PWA: Konten baru tersedia, silakan muat ulang halaman.');
+              }
+            };
+          }
+        };
       })
-      .catch(err => console.error('SW Registration Failed!', err));
+      .catch(err => {
+        if (err.name === 'SecurityError') {
+          console.info('ℹ️ PWA: Registrasi SW dibatasi di lingkungan sandbox (seperti Preview Editor). Fitur PWA akan aktif sepenuhnya saat di-deploy ke hosting HTTPS (GitHub Pages, Vercel, dll).');
+        } else {
+          console.error('❌ PWA: Registrasi SW gagal:', err);
+        }
+      });
   });
 }
 

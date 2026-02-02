@@ -6,7 +6,7 @@ import AdminPanel from './components/AdminPanel.tsx';
 import { AttendanceLog, ScanStatus } from './types.ts';
 import { submitAttendance } from './services/api.ts';
 import { APP_CONFIG } from './constants.ts';
-import { History, AlertTriangle, Play, Settings, Download } from 'lucide-react';
+import { History, AlertTriangle, Play, Settings, Download, ShieldCheck } from 'lucide-react';
 
 const App: React.FC = () => {
   const [isStarted, setIsStarted] = useState<boolean>(false);
@@ -20,16 +20,27 @@ const App: React.FC = () => {
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
-    // Listen for the beforeinstallprompt event
-    window.addEventListener('beforeinstallprompt', (e) => {
+    // Cek apakah aplikasi sudah berjalan dalam mode standalone (terinstall)
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      console.log('🚀 Aplikasi dijalankan dalam mode Standalone (PWA)');
+    }
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      console.log('📥 PWA: Event beforeinstallprompt terdeteksi. Aplikasi siap diinstal.');
       e.preventDefault();
       setDeferredPrompt(e);
-    });
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     window.addEventListener('appinstalled', () => {
+      console.log('✅ PWA: Aplikasi berhasil diinstal oleh pengguna');
       setDeferredPrompt(null);
-      console.log('Aplikasi berhasil diinstal');
     });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
 
   const handleInstallClick = async () => {
@@ -37,7 +48,10 @@ const App: React.FC = () => {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
+      console.log('User menerima instalasi');
       setDeferredPrompt(null);
+    } else {
+      console.log('User membatalkan instalasi');
     }
   };
 
@@ -167,7 +181,7 @@ const App: React.FC = () => {
           />
         </div>
         <h1 className="text-3xl font-bold mb-2">Sistem Aplikasi Parkir</h1>
-        <p className="text-blue-100 mb-8 max-w-xs text-sm font-medium tracking-widest opacity-90">SMAN 1 CIRUAS</p>
+        <p className="text-blue-100 mb-8 max-w-xs text-sm font-medium tracking-widest opacity-90 uppercase">SMAN 1 CIRUAS</p>
         
         <div className="flex flex-col gap-3 w-full max-w-xs">
           <button 
@@ -181,12 +195,17 @@ const App: React.FC = () => {
           {deferredPrompt && (
             <button 
               onClick={handleInstallClick}
-              className="bg-blue-500/50 text-white font-semibold px-10 py-3 rounded-2xl border border-white/20 flex items-center justify-center gap-3 active:scale-95 transition-transform"
+              className="bg-blue-500/50 text-white font-semibold px-10 py-3 rounded-2xl border border-white/20 flex items-center justify-center gap-3 active:scale-95 transition-transform hover:bg-blue-500/70"
             >
               <Download size={18} />
-              Install Aplikasi
+              Install di Beranda HP
             </button>
           )}
+
+          <div className="mt-4 flex items-center justify-center gap-2 text-[10px] text-blue-200 uppercase tracking-widest font-bold">
+            <ShieldCheck size={12} />
+            Secure Cloud Database
+          </div>
         </div>
       </div>
     );
@@ -278,7 +297,7 @@ const App: React.FC = () => {
       )}
       
       <footer className="text-center p-6 text-gray-400 text-[10px] mt-auto font-medium">
-        2026 PARKIR QR SMAN 1 CIRUAS &bull; VERSION 1.5-PWA &bull; {new Date().getFullYear()}
+        © 2026 PARKIR QR SMAN 1 CIRUAS &bull; v1.4-PWA &bull; BUILD {new Date().getFullYear()}
       </footer>
     </div>
   );
